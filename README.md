@@ -6,9 +6,8 @@ Este repositório faz parte da entrega do trabalho prático da disciplina de Sis
 </h1>
 
 <p align="center">
-  <a href="#bully">BullyAlgorithm</a> • 
-  <a href="#visualSequencer">SequencerAlgorithm</a> •
-  <a href="#sequencerJava">SequencerAlgorithmJava</a>
+  <a href="#destino">AcordoDestino</a> • 
+  <a href="#bully">Algoritmo Bully</a>
 </p>
 
 <h2 id="bully">BullyAlgorithm</h2>
