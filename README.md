@@ -41,9 +41,9 @@ python acordoDestino.py
 
 ### Sobre
 
-O BullyAlgorithm é um algoritmo que simula o algoritmo de bully, o algoritmo é feito em sistemas multiagents com base em um framework chamado JaCaMo que em suma é uma junção de frameworks o Jason que seria a parte dos agentes que tem como base o ASL (agentspeak language), Cartago uma framework para trabalhar com o Jason, um framework baseado em artefatos, e por fim o Moise um framework para a estruturação dos agentes.
+O algoritmo de eleição Bully é um método utilizado para selecionar um coordenador ou líder entre os nós. Quando um nó detecta que o coordenador atual falhou, ele inicia o processo de eleição. O nó que inicia a eleição envia uma mensagem a todos os nós com IDs maiores que o seu, solicitando uma eleição.
 
-A ideia do codigo é simular o algoritimo de Bully, o sistema inicia com uma interface grafica e o sistema espera que o botão iniciar seja apertado primeiramente. Após o botão de iniciar o sistema o usuario poderá apertar qualquer botão na interface, são eles o botão de matar um processo que espera que você tenha digitado um numero valido de processo no campo de texto, esse botão ira matar o processo escolhido, o proximo botão é o botão de reviver um processo que vai ressucitar um processo previamente morto, e por fim o botão de qual processo vai iniciar a percepção de que o processo líder está morto.
+Os nós que recebem a solicitação de eleição respondem e também iniciam suas próprias eleições, enviando mensagens para todos os nós com IDs maiores que os seus. Isso continua até que um nó não receba resposta de nenhum nó com ID maior, declarando-se o novo coordenador. O novo coordenador então anuncia sua vitória para todos os nós da rede, assumindo a função de líder até que uma nova falha seja detectada. Esse algoritmo é chamado de "bully" porque o nó com o maior ID acaba "intimidando" os outros e se tornando o líder.
 
 ### Como executar localmente
 
@@ -56,10 +56,10 @@ A ideia do codigo é simular o algoritimo de Bully, o sistema inicia com uma int
 Acessar a pasta do projeto SequencerAlgorithmJava
 
 ```bash
-cd BullyAlgorithm
+cd algBully
 ```
 Rodar o comando abaixo na raiz do projeto:
 
 ```bash
-python3 
+python3 algBully.py
 ```
