@@ -1,193 +1,189 @@
-import random
 import tkinter as tk
 from tkinter import ttk
-from threading import Thread, Event, Lock
+from tkinter.scrolledtext import ScrolledText
 from tabulate import tabulate
-from termcolor import colored
+import random
 import time
 
 class Processo:
-    def __init__(self, id, ativar=True):
+    def __init__(self, id, ativo=True):
         self.id = id
-        self.ativar = ativar
+        self.ativo = ativo
 
     def __str__(self):
         return f"Processo {self.id}"
-
-    def executar(self):
-        print(f"{self} está executando sua tarefa.")
-        time.sleep(1)
 
 class Anel:
     def __init__(self):
         self.processos = []
         self.coordenador = None
-        self.lock = Lock()
-        self.proximo_processo_id = 1  # Controle do próximo ID do processo
-        self.comunicacao = []  # Lista para rastrear a comunicação entre processos
-        self.processo_que_identificou_falha = None  # Para rastrear qual processo identificou a falha
+        self.comunicacao = []
+        self.proximo_id = 1
 
-    def adicionar_processo(self, processo):
-        with self.lock:
-            self.processos.append(processo)
-            print(f"{processo} foi adicionado ao anel")
+    def adicionar_processo(self):
+        processo = Processo(self.proximo_id)
+        self.proximo_id += 1
+        self.processos.append(processo)
+        return processo
 
-    def iniciar_eleicao(self, processo_inicial=None):
-        with self.lock:
-            ativos = [p for p in self.processos if p.ativar]
-            if not ativos:
-                print("Sem processos ativos para iniciar a eleição")
-                return None
+    def iniciar_eleicao(self):
+        ativos = [p for p in self.processos if p.ativo]
+        if not ativos:
+            return None
 
-            if processo_inicial is None:
-                processo_inicial = random.choice(ativos)
-            print(f"O processo {processo_inicial} iniciará a eleição.")
+        processo_inicial = random.choice(ativos)
+        ids_comunicacao = [processo_inicial.id]
+        processo_atual = processo_inicial
 
-            ids_comunicacao = [processo_inicial.id]
-            processo_atual = processo_inicial
-            while True:
-                proximo_processo = self.get_proximo_processo(processo_atual)
-                if proximo_processo and proximo_processo != processo_inicial:
-                    ids_comunicacao.append(proximo_processo.id)
-                    self.comunicacao.append((processo_atual.id, ids_comunicacao[:], proximo_processo.id))
-                    processo_atual = proximo_processo
-                else:
-                    break
+        while True:
+            proximo_processo = self.get_proximo_processo(processo_atual)
+            if proximo_processo and proximo_processo != processo_inicial:
+                ids_comunicacao.append(proximo_processo.id)
+                self.comunicacao.append((processo_atual.id, ids_comunicacao[:], proximo_processo.id))
+                processo_atual = proximo_processo
+            else:
+                break
 
-            coordenador = max(ativos, key=lambda p: p.id)
-            print(f"{coordenador} se tornou o coordenador")
-            self.coordenador = coordenador  # Definir o coordenador atual
-            return coordenador
+        coordenador = max(ativos, key=lambda p: p.id)
+        self.coordenador = coordenador
+        return coordenador
 
     def get_proximo_processo(self, processo_atual):
-        ativos = [p for p in self.processos if p.ativar and p.id != processo_atual.id]
+        ativos = [p for p in self.processos if p.ativo and p.id != processo_atual.id]
         if ativos:
             proximo_index = (self.processos.index(processo_atual) + 1) % len(self.processos)
-            while not self.processos[proximo_index].ativar:
+            while not self.processos[proximo_index].ativo:
                 proximo_index = (proximo_index + 1) % len(self.processos)
             return self.processos[proximo_index]
         return None
 
-    def falhar_lider(self):
-        with self.lock:
-            if self.coordenador and self.coordenador.ativar:
-                coordenador_falho = self.coordenador
-                coordenador_falho.ativar = False
-                print(f"Líder {coordenador_falho} falhou.")
-                self.processo_que_identificou_falha = random.choice([p for p in self.processos if p.ativar and p != coordenador_falho])
-                return coordenador_falho
-            return None
+    def falha_lider(self):
+        if self.coordenador and self.coordenador.ativo:
+            lider_falho = self.coordenador
+            lider_falho.ativo = False
+            return lider_falho
+        return None
 
-    def iniciar_nova_eleicao(self):
-        with self.lock:
-            if self.processo_que_identificou_falha:
-                processo_que_identificou = self.processo_que_identificou_falha
-                self.processo_que_identificou_falha = None  # Limpar o processo que identificou a falha
-                print(f"Processo {processo_que_identificou} identificou a falha e iniciou nova eleição.")
-                novo_coordenador = self.iniciar_eleicao()
-                if novo_coordenador:
-                    self.coordenador = novo_coordenador
-                    return processo_que_identificou, novo_coordenador
-            return None
+    def identificar_falha_e_iniciar_eleicao(self):
+        ativos = [p for p in self.processos if p.ativo]
+        if ativos:
+            processo_que_identificou = random.choice(ativos)
+            novo_coordenador = self.iniciar_eleicao()
+            return processo_que_identificou, novo_coordenador
+        return None, None
 
-    def selecionar_processo_aleatorio(self):
-        with self.lock:
-            ativos = [p for p in self.processos if p.ativar]
-            if ativos:
-                return random.choice(ativos)
-            return None
+    def get_coordenador_atual(self):
+        return self.coordenador
 
-    def atualizar_tabela(self):
-        # Cria e atualiza a tabela de comunicação
-        headers = [colored("Processo Atual", "cyan"), colored("Comunicação", "cyan"), colored("Ref. de Saída", "cyan")]
-        table_data = []
-        for processo_atual, mensagem, ref_saida in self.comunicacao:
-            mensagem_str = ",".join(map(str, mensagem))
-            table_data.append([colored(processo_atual, "green"), colored(mensagem_str, "magenta"), colored(ref_saida, "green")])
-        tabela = tabulate(table_data, headers, tablefmt="fancy_grid")
-        return tabela
+    def get_comunicacao(self):
+        return self.comunicacao
 
 class App:
-    def __init__(self, root, anel):
+    def __init__(self, root):
         self.root = root
-        self.root.title("Bully Algorithm - Eleição de Coordenador")
-        self.anel = anel
-        self.momento_atual = 0  # Controla o momento atual
+        self.root.title("Bully Algorithm - Simulação de Eleição de Coordenador")
+        self.root.geometry("900x600")  # Ajustando o tamanho da janela principal
+        self.anel = Anel()
+        self.momento_atual = 0
+        self.novo_coordenador = None
+        self.historico_eventos = []
         self.init_ui()
 
     def init_ui(self):
-        self.frame = ttk.Frame(self.root, padding="10")
+        self.frame = ttk.Frame(self.root, padding="20")
         self.frame.pack(fill=tk.BOTH, expand=True)
 
-        self.button_avancar = ttk.Button(self.frame, text="Avançar", command=self.avancar)
-        self.button_avancar.pack(pady=5)
+        self.label_instrucao = ttk.Label(self.frame, text="Clique no botão 'Avançar' para simular cada momento.")
+        self.label_instrucao.pack(pady=10)
 
-        self.text_output = tk.Text(self.frame, height=20, width=60)
-        self.text_output.pack(pady=10)
+        self.button_avancar = ttk.Button(self.frame, text="Avançar", command=self.avancar)
+        self.button_avancar.pack(pady=10)
+
+        self.table_output = ScrolledText(self.frame, height=20, width=100, wrap=tk.WORD)
+        self.table_output.pack(pady=10, expand=True, fill=tk.BOTH)  # Ajustando o tamanho da tabela
+
+        self.label_comunicacao = ttk.Label(self.frame, text="Comunicação:")
+        self.label_comunicacao.pack(pady=5)
+
+        self.comunicacao_output = ScrolledText(self.frame, height=10, width=100, wrap=tk.WORD)
+        self.comunicacao_output.pack(pady=10, expand=True, fill=tk.BOTH)
+
+        self.atualizar_tabela("Inicialização: Adicione 6 processos para começar.")
 
     def avancar(self):
         self.momento_atual += 1
 
         if self.momento_atual == 1:
             # Momento 1: Adicionar 6 processos
-            for i in range(1, 7):
-                novo_processo = Processo(id=i)
-                self.anel.adicionar_processo(novo_processo)
-                self.text_output.insert(tk.END, f"{novo_processo} foi adicionado ao anel\n")
-            self.text_output.insert(tk.END, "\n--- Momento 1: Adicionados 6 processos ---\n\n")
+            for _ in range(6):
+                self.anel.adicionar_processo()
+            self.atualizar_tabela("Momento 1: Adicionados 6 processos ao anel.")
 
         elif self.momento_atual == 2:
             # Momento 2: Iniciar eleição para definir o coordenador
             coordenador = self.anel.iniciar_eleicao()
             if coordenador:
-                self.text_output.insert(tk.END, f"O coordenador eleito é o {coordenador}\n")
+                comunicacao = self.anel.get_comunicacao()
+                self.atualizar_tabela(f"Momento 2: Iniciada eleição. Coordenador eleito: {coordenador}", comunicacao)
+                self.atualizar_comunicacao(comunicacao)
             else:
-                self.text_output.insert(tk.END, "Nenhum processo ativo para iniciar a eleição\n")
-            self.text_output.insert(tk.END, "\n--- Momento 2: Eleição de coordenador ---\n\n")
+                self.atualizar_tabela("Momento 2: Nenhum processo ativo para iniciar a eleição.")
 
         elif self.momento_atual == 3:
-            # Momento 3: Simular falha do líder e identificar processo falho
-            coordenador_falho = self.anel.falhar_lider()
-            if coordenador_falho:
-                self.text_output.insert(tk.END, f"Líder {coordenador_falho} falhou\n")
-                if self.anel.processo_que_identificou_falha:
-                    processo_que_identificou, novo_coordenador = self.anel.iniciar_nova_eleicao()
-                    if processo_que_identificou and novo_coordenador:
-                        self.text_output.insert(tk.END, f"Processo {processo_que_identificou} identificou a falha e iniciou nova eleição\n")
-                        self.text_output.insert(tk.END, f"Novo coordenador eleito: {novo_coordenador}\n")
-                    else:
-                        self.text_output.insert(tk.END, "Não foi possível iniciar nova eleição\n")
-                else:
-                    self.text_output.insert(tk.END, "Nenhum processo identificou a falha\n")
+            # Momento 3: Simular falha do líder
+            lider_falho = self.anel.falha_lider()
+            if lider_falho:
+                self.atualizar_tabela(f"Momento 3: Líder {lider_falho} falhou.")
             else:
-                self.text_output.insert(tk.END, "Não há líder para falhar\n")
-            self.text_output.insert(tk.END, "\n--- Momento 3: Líder falhou ---\n\n")
+                self.atualizar_tabela("Momento 3: Não há líder para falhar.")
 
         elif self.momento_atual == 4:
-            # Momento 4: Mostrar o novo coordenador eleito após a eleição
-            if self.anel.coordenador:
-                self.text_output.insert(tk.END, f"Novo coordenador eleito: {self.anel.coordenador}\n")
+            # Momento 4: Identificar falha do líder e iniciar nova eleição
+            processo_que_identificou, novo_coordenador = self.anel.identificar_falha_e_iniciar_eleicao()
+            if processo_que_identificou and novo_coordenador:
+                comunicacao = self.anel.get_comunicacao()
+                self.atualizar_tabela(f"Momento 4: Processo {processo_que_identificou} identificou a falha. Novo coordenador: {novo_coordenador}", comunicacao)
+                self.atualizar_comunicacao(comunicacao)
+                self.novo_coordenador = novo_coordenador
             else:
-                self.text_output.insert(tk.END, "Nenhum novo coordenador foi eleito\n")
-            self.text_output.insert(tk.END, "\n--- Momento 4: Novo coordenador eleito ---\n\n")
+                self.atualizar_tabela("Momento 4: Não foi possível iniciar nova eleição.")
 
-        else:
-            self.text_output.insert(tk.END, "Todos os momentos concluídos.\n")
+        elif self.momento_atual == 5:
+            # Momento 5: Mostrar o resultado da nova eleição
+            novo_coordenador = self.anel.get_coordenador_atual()
+            if novo_coordenador:
+                self.atualizar_tabela(f"Momento 5: Novo coordenador após a eleição: {novo_coordenador}")
+                self.novo_coordenador = novo_coordenador
+            else:
+                self.atualizar_tabela("Momento 5: Nenhum coordenador eleito após a eleição.")
 
-        self.text_output.see(tk.END)  # Rolagem automática para a última linha
+    def atualizar_tabela(self, evento, comunicacao=None):
+        self.historico_eventos.append(evento)
+        
+        headers = ["Momento", "Evento"]
+        data = [
+            ["1", "Inicialização: Adicione 6 processos para começar."],
+            ["2", "Aguardando ação..."],
+            ["3", "Aguardando ação..."],
+            ["4", "Aguardando ação..."],
+            ["5", "Aguardando ação..."]
+        ]
 
-        # Atualizar a interface gráfica após cada momento
-        self.root.after(100, self.update_gui)
+        for i in range(min(len(self.historico_eventos), 5)):
+            data[i][1] = self.historico_eventos[i]
 
-    def update_gui(self):
-        # Atualiza a interface com a tabela de comunicação
-        tabela = self.anel.atualizar_tabela()
-        self.text_output.insert(tk.END, tabela + "\n")
-        self.text_output.see(tk.END)  # Rolagem automática para a última linha
+        table = tabulate(data, headers, tablefmt="grid")
+        self.table_output.delete(1.0, tk.END)
+        self.table_output.insert(tk.END, table)
+
+    def atualizar_comunicacao(self, comunicacao):
+        self.comunicacao_output.configure(state=tk.NORMAL)
+        self.comunicacao_output.delete(1.0, tk.END)
+        for com in comunicacao:
+            self.comunicacao_output.insert(tk.END, f"{com}\n")
+        self.comunicacao_output.configure(state=tk.DISABLED)
 
 if __name__ == "__main__":
-    anel = Anel()
-
     root = tk.Tk()
-    app = App(root, anel)
+    app = App(root)
     root.mainloop()
