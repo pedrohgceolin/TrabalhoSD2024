@@ -1,5 +1,5 @@
 <h1 align="center" style="font-weight: bold;">Trabalho Prático - SD - 2024/1 
-<br>Antônio Pedro Cacharosque e Pedro Henrique Gonçalves Ceolin
+<br>Antônio Pedro Chacarosque e Pedro Henrique Gonçalves Ceolin
 </h1>
 
 <p align="center">
