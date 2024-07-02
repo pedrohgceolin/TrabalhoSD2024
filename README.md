@@ -14,7 +14,11 @@ Este repositório faz parte da entrega do trabalho prático da disciplina de Sis
 
 ### Sobre
 
-O algoritmo de acordo no destino é um método utilizado em sistemas distribuídos para garantir que todos os nós participantes cheguem a um consenso sobre um valor ou estado comum, mesmo na presença de falhas. O objetivo principal é cumprir três condições: terminação (todos os nós eventualmente tomam uma decisão), acordo (todos os nós escolhem o mesmo valor) e validade (se todos os nós iniciam com o mesmo valor, esse será o valor decidido). O processo envolve a proposição de valores, troca de mensagens entre os nós e a decisão final baseada nas informações recebidas.
+O algoritmo de acordo no destino é um método utilizado em sistemas distribuídos para garantir que todos os nós participantes cheguem a um consenso sobre um valor ou estado comum, mesmo na presença de falhas.
+
+O objetivo principal é cumprir três condições: terminação (todos os nós eventualmente tomam uma decisão), acordo (todos os nós escolhem o mesmo valor) e validade (se todos os nós iniciam com o mesmo valor, esse será valor decidido). 
+
+O processo envolve a proposição de valores, troca de mensagens entre os nós e a decisão final baseada nas informações recebidas.
 
 ### Como executar localmente
 
@@ -33,11 +37,8 @@ cd AcordoDestino
 Rodar o comando abaixo na raiz do projeto:
 
 ```bash
-gradle 
+python3 AcordoDestino.py
 ```
-
-<h2 id="visualSequencer">SequencerAlgorithm</h2>
-
 
 <h2 id="bully">BullyAlgorithm</h2>
 
@@ -51,8 +52,7 @@ A ideia do codigo é simular o algoritimo de Bully, o sistema inicia com uma int
 
 #### Pré requisitos
 
-- Java 17+
-- Gradle 8.7+
+- Python 3
 
 #### Passo a Passo
 
@@ -65,11 +65,5 @@ cd BullyAlgorithm
 Rodar o comando abaixo na raiz do projeto:
 
 ```bash
-gradle run
+python3 
 ```
-
-Depois disso ele vai pegar todas as dependencias necessarias e vai rodar o programa abrindo a interface grafica.
-
-Qualquer dificuldade em rodar o programa mais informações podem ser adquiridas no link a seguir [Instalação JaCaMo](https://github.com/jacamo-lang/jacamo/blob/main/doc/install.adoc)
-
-<h2 id="visualSequencer">SequencerAlgorithm</h2>
