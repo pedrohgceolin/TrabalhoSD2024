@@ -28,13 +28,13 @@ O processo envolve a proposição de valores, troca de mensagens entre os nós e
 Acessar a pasta do projeto AcordoDestino
 
 ```bash
-cd AcordoDestino
+cd acordoDestino
 ```
 
 Rodar o comando abaixo na raiz do projeto:
 
 ```bash
-python AcordoDestino.py
+python acordoDestino.py
 ```
 
 <h2 id="bully">BullyAlgorithm</h2>
